@@ -7,3 +7,4 @@ lean_playground/*
 __pycache__/
 .venv/
 .tasks_copy/
+.env

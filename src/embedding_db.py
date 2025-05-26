@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# ...existing code...
 import os
 import numpy as np
 import requests
@@ -7,6 +11,9 @@ import tiktoken  # For token counting
 import PyPDF2
 from src.embedding_models import BaseEmbeddingModel, OpenAIEmbeddingModel, MiniEmbeddingModel
 import pickle 
+
+from dotenv import load_dotenv
+load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -146,7 +153,29 @@ class VectorDB:
                 print("-" * 50)
 
         return top_k_chunks, top_k_scores
+    
+    def run(query: str = None):
+        """
+        Main entry point for manual or scripted execution.
+        Initializes the vector DB and optionally performs a sample query.
+        """
+        print("[VectorDB.run] Starting vector DB setup...")
 
+        openai_embedding_model = OpenAIEmbeddingModel()
+        embedding_database_file = "database.npy"
+        
+        vector_db = VectorDB(
+            directory="documents", 
+            vector_file=embedding_database_file, 
+            embedding_model=openai_embedding_model
+        )
+        
+        top_k_chunks, top_k_scores = VectorDB.get_top_k(
+            embedding_database_file, openai_embedding_model, query, k=3, verbose=True
+        )
+        
+        print("[VectorDB.run] Completed vector DB setup and query.")
+        return top_k_chunks, top_k_scores
 
 if __name__ == "__main__":
     # Create and save the database

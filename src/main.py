@@ -1,8 +1,13 @@
 import os
+import json
 import argparse
-from src.agents import Reasoning_Agent, LLM_Agent
+from src.agents import Reasoning_Agent, LLM_Agent, PlanningAgent, CodeGenAgent, VerificationAgent, AgentWorkflow
+from src.embedding_db import VectorDB
 from src.lean_runner import execute_lean_code
 from typing import Dict, List, Tuple
+from src.logger_setup import logger
+
+
 
 type LeanCode = Dict[str, str]
 
@@ -25,10 +30,77 @@ def main_workflow(problem_description: str, task_lean_code: str = "") -> LeanCod
     # Feel free to chain multiple agents together, use the RAG database (.pkl) file, corrective feedback, etc.
     # Please use the agents provided in the src/agents.py module, which include GPT-4o and the O3-mini models.
     ...
+    print(f"Problem description: {problem_description}")
+    print(f"Task Lean code: {task_lean_code}")
+
+    logger.info(f"Problem description: {problem_description}")
+    logger.info(f"Task Lean code: {task_lean_code}")
+
+    top_k_chunks,_ = VectorDB.run(problem_description)
+    context = "\n".join(top_k_chunks)
+    logger.info(f"Retrieved context: {context}")
+    print(f"Retrieved context: {context}")
+
+    '''
+    planning_agent = PlanningAgent()
+    plan = planning_agent.plan_steps(problem_description)
+    logger.info(f"Generated plan: {plan}")
+    print(f"Generated plan: {plan}")
+
+    codegen_agent = CodeGenAgent()
+    raw_solution = codegen_agent.generate_code_and_proof(plan, task_lean_code, retrieved_context=context)
+    generated_solution = json.loads(raw_solution)
+    logger.info(f"Generated solution: {generated_solution}")
+    print(f"Generated solution: {generated_solution}")
+    generated_function_implementation = generated_solution["code"]
+    print(f"Generated code: {generated_function_implementation}")
+    logger.info(f"Generated code: {generated_function_implementation}")
+    generated_proof = generated_solution["proof"]
+    logger.info(f"Generated proof: {generated_proof}")
+    print(f"Generated proof: {generated_proof}")
+
+    verification_agent = VerificationAgent(execute_lean_code_func=execute_lean_code)
+
+    raw_feedback = verification_agent.run_and_verify(
+        problem_description,
+        task_lean_code,
+        generated_function_implementation,
+        generated_proof
+    )
+
+    verification_result = json.loads(raw_feedback)
+    logger.info(f"Verification result: {verification_result}")
+    print(f"Verification result: {verification_result}")
+    if verification_result["verdict"] == "pass":
+        logger.info("Verification passed.")
+        print("Verification passed.")
+        generated_function_implementation = generated_function_implementation
+        generated_proof = generated_proof
+    else:
+        logger.error(f"Verification failed: {verification_result['error_summary']}")
+        print(f"Verification failed: {verification_result['error_summary']}")
+        # Handle the case where verification fails, e.g., by returning an error or retrying.
+        return {
+            "code": "sorry",
+            "proof": "sorry"
+        }
+    '''
+    # Instantiate agents
+    planning_agent = PlanningAgent()
+    codegen_agent = CodeGenAgent()
+    verification_agent = VerificationAgent(execute_lean_code_func=execute_lean_code)
+
+    # Use the feedback loop workflow
+    workflow = AgentWorkflow(planning_agent, codegen_agent, verification_agent)
+    result = workflow.run(problem_description, task_lean_code, rag_context=context)
+
+    # Unpack for required return
+    generated_function_implementation = result.get("code", "sorry")
+    generated_proof = result.get("proof", "sorry")
 
     # Example return for task_id_0
-    generated_function_implementation = "x"
-    generated_proof = "rfl"
+    #generated_function_implementation = "x"
+    #generated_proof = "rfl"
     
     return {
         "code": generated_function_implementation,
