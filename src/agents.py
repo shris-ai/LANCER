@@ -5,6 +5,7 @@ import os
 import yaml
 import json
 from src.logger_setup import logger
+from src.embedding_db import VectorDB
 
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -194,7 +195,11 @@ class AgentWorkflow:
         self.verification_agent = verification_agent
         self.max_attempts = max_attempts
 
-    def run(self, problem_description: str, task_lean_code: str, rag_context: str = "") -> dict:
+    def run(self, problem_description: str, task_lean_code: str) -> dict:
+        top_k_chunks,_ = VectorDB.run(problem_description)
+        rag_context = "\n".join(top_k_chunks)
+        logger.info(f"Retrieved context: {rag_context}")
+        print(f"Retrieved context: {rag_context}")
         plan = self.planning_agent.plan_steps(problem_description)
         previous_errors = set()
 
@@ -260,19 +265,16 @@ class AgentWorkflow:
             error_message = feedback.get("error_summary", "")
             if error_message in previous_errors:
                 logger.info(f"Attempt {attempt + 1} failed due to repeated error: {error_message}")
-                if attempt != self.max_attempts - 1:
-                    break
-                else:
-                    logger.error("Last attempt failed. Returning original code and proof.")
-                    return {"code": code, "proof": proof}
-            previous_errors.add(error_message)
-
-            if attempt != self.max_attempts - 1:
-                break
-            else:
                 logger.error("Last attempt failed. Returning original code and proof.")
                 return {"code": code, "proof": proof}
+            previous_errors.add(error_message)
 
+            if feedback.get("retrieval_prompt") is None:
+                retrieval_prompt = feedback.get("retrieval_prompt", "")
+                top_k_chunks,_ = VectorDB.run(retrieval_prompt)
+                rag_context = "\n".join(top_k_chunks)
+                logger.info(f"Updated Retrieved context: {rag_context}")
+                print(f"Updated Retrieved context: {rag_context}")
 
 
             # Feedback loop: update plan based on error
@@ -282,7 +284,7 @@ class AgentWorkflow:
             )
 
         # If all attempts fail, return sorry
-        return {"code": "sorry", "proof": "sorry"}
+        return {"code": code, "proof": proof}
 
 # Example usage:
 if __name__ == "__main__":

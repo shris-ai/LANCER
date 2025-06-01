@@ -25,6 +25,7 @@ outputs:
     error_type: enum ["syntax", "type", "proof", "timeout", "unknown"]
     suggested_fix: string
     retry_strategy: string
+    retrieval_prompt: string
 
 notes: |
   Avoid vague suggestions—be specific about what needs to be revised.
@@ -34,21 +35,21 @@ notes: |
   If the code fails to compile or run, classify the error type and suggest how to fix it.
   If the proof times out, suggest strategies to optimize the proof or code.
   If the output is unknown, request clarification or additional context.
+  When Lean reports an error, always:
+    - Summarize the error in your own words.
+    - Suggest a concrete, minimal fix.
+    - If the error is about a tactic (e.g., `introN`), explain what went wrong and how to rewrite the tactic sequence.
+    - If the error is about an unknown identifier, suggest a known alternative or a simpler approach.
+    - If the error is repeated, recommend a different proof strategy.
+    - Provide a Lean documentation link if possible.
+  In addition, for any error, generate a retrieval prompt in the output field "retrieval_prompt".
+  This prompt should be a concise query or instruction that can be used to retrieve relevant documentation, examples, or code snippets to help address the specific error and suggested improvement.
+  For example, if the error is about a tactic, the retrieval prompt might be "Lean 4 tactic introN usage and alternatives".
+  If the error is about a type mismatch, the retrieval prompt might be "Lean 4 type mismatch Nat Bool common causes and fixes".
+ 
 examples:
   - input:
-      generated_code: "def my_function (x : Nat) : Nat := x + 1"
-      generated_proof: "theorem my_theorem : my_function 0 = 1 := by simp"
-      lean_output_stdout: "Proof completed successfully."
-      lean_output_stderr: ""
-    output:
-      verdict: "pass"
-      error_summary: ""
-      error_type: "unknown"
-      suggested_fix: ""
-      retry_strategy: ""
-
-  - input:
-      generated_code: "def my_function (x : Nat) : Nat := x + 'a'"  # Syntax error
+      generated_code: "def my_function (x : Nat) : Nat := x + 'a'"
       generated_proof: "theorem my_theorem : my_function 0 = 1 := by simp"
       lean_output_stdout: ""
       lean_output_stderr: "error: invalid argument type 'a' in 'Nat'"
@@ -58,3 +59,4 @@ examples:
       error_type: "syntax"
       suggested_fix: "Change 'a' to a valid Nat value."
       retry_strategy: "Revise the function definition to use valid types."
+      retrieval_prompt: "Lean 4 valid Nat literals and function definition syntax"

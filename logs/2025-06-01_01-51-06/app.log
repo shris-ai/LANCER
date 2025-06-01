@@ -1,0 +1,40 @@
+2025-06-01 01:51:10,140 - INFO - Starting test of 11 tasks: task_id_0, task_id_58, task_id_77, task_id_127, task_id_227, task_id_404, task_id_431, task_id_433, task_id_435, task_id_441, task_id_447
+2025-06-01 01:51:10,140 - INFO - 
+==================================================
+2025-06-01 01:51:10,140 - INFO - Processing task task_id_0...
+2025-06-01 01:51:10,140 - INFO - Reading problem description and code template from tasks/task_id_0...
+2025-06-01 01:51:10,140 - INFO - Problem description length: 310 characters
+2025-06-01 01:51:10,140 - INFO - Reading unit tests from tasks/task_id_0...
+2025-06-01 01:51:10,141 - INFO - Unit tests length: 69 characters
+2025-06-01 01:51:10,141 - INFO - Running main workflow to generate solution...
+2025-06-01 01:51:10,141 - INFO - Problem description: -----Description----- 
+This task requires writing a Lean 4 function that takes a natural number as input and returns the same natural number as output.
+
+-----Input-----
+The input consists of one natural number:
+x: An natural number.
+
+-----Output-----
+The output is a natural number which the value equals to x.
+2025-06-01 01:51:10,141 - INFO - Task Lean code: import Mathlib
+import Aesop
+
+-- Implementation
+def ident (x : Nat) : Nat :=
+  -- << CODE START >>
+  {{code}}
+  -- << CODE END >>
+
+
+def ident_spec (x : Nat) (result: Nat) : Prop :=
+  -- << SPEC START >>
+  result = x
+  -- << SPEC END >>
+
+theorem ident_spec_satisfied (x : Nat) :
+  ident_spec x (ident x) := by
+  -- << PROOF START >>
+  unfold ident ident_spec
+  {{proof}}
+  -- << PROOF END >>
+

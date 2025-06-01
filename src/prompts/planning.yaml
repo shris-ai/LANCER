@@ -32,6 +32,14 @@ notes: |
   Suggest inductive or constructive proof strategies when possible.
   If previous errors are provided, analyze them to refine the plan.
   Use clear, concise language.
+  If your function uses Boolean logic or `if...then...else`, always plan to:
+    - Use `by_cases` or `split_ifs` on the Boolean condition(s) in the proof.
+    - Use `simp` in each branch to reduce the goal to true ↔ true or false ↔ false.
+    - Close each goal with `trivial`, `exact`, or `exfalso` depending on context.
+  Do not plan to use `case inl`/`case inr` (Lean 3-style); use `case pos`/`case neg` in Lean 4.
+  Never rely on `sorry` or incomplete proofs; all goals must be discharged.
+  If the function's return type is `Bool` and the specification is a `↔` with a Prop, then include a plan to handle the `if` structure explicitly using `by_cases` or `split_ifs`.
+  Lean 4 requires `pos`/`neg` tags for `by_cases`. Do not mention `inl` or `inr`.
 examples:
   - input:
       task_description: "Implement a function to compute the factorial of a natural number."

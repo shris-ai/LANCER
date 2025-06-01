@@ -36,10 +36,12 @@ def main_workflow(problem_description: str, task_lean_code: str = "") -> LeanCod
     logger.info(f"Problem description: {problem_description}")
     logger.info(f"Task Lean code: {task_lean_code}")
 
+    '''
     top_k_chunks,_ = VectorDB.run(problem_description)
     context = "\n".join(top_k_chunks)
     logger.info(f"Retrieved context: {context}")
     print(f"Retrieved context: {context}")
+    '''
 
     '''
     planning_agent = PlanningAgent()
@@ -92,7 +94,7 @@ def main_workflow(problem_description: str, task_lean_code: str = "") -> LeanCod
 
     # Use the feedback loop workflow
     workflow = AgentWorkflow(planning_agent, codegen_agent, verification_agent)
-    result = workflow.run(problem_description, task_lean_code, rag_context=context)
+    result = workflow.run(problem_description, task_lean_code)
 
     # Unpack for required return
     generated_function_implementation = result.get("code", "sorry")

@@ -39,6 +39,8 @@ guidelines: |
   For specifications of the form `P ↔ result` where `result` is a Bool, after `unfold`, use `by_cases` on the main Boolean condition(s) and use `simp` in each branch. Do not introduce unnecessary intermediate variables or subcases.
   Do NOT use `⟨..., by ...⟩` or similar constructs. All tactic blocks must be at the top level.
   Prefer the simplest possible proof that closes all goals. Avoid introducing unnecessary variables, cases, or tactics.
+  If you encounter a Lean error in feedback, always revise the proof/code to address the specific cause, not just rephrase.
+  If a tactic fails (e.g., introN), use a more basic tactic sequence or split the goal differently.
   
 examples:
   - input:
